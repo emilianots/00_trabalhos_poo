@@ -1,0 +1,304 @@
+let help = `
+help;
+addUser _user;
+allUser;
+newGroup _user _group;
+chats _user;
+invite _user _invited _group;
+users  _group;
+leave _user _group;
+zap _user _group _msg;
+notify _user;
+ler _user _group;
+newtalk _user _user
+`
+let text = "";
+function chaves(valor, chave, mapa) {
+	text += (chave) + " ";
+}
+class Zap{
+	public userID : string;
+	public msg : string;
+	
+	constructor(user : string, msg : string){
+		this.userID = user;
+		this.msg = msg;
+	}
+	
+	toString(): string{
+		return this.userID + ": " + this.msg;
+	}
+}
+
+class UserInbox{
+	public user : User
+	public inbox : Zap[];
+	
+	constructor(user : User){
+		this.user = user;
+		this.inbox = [];
+	}
+    public addZap(zap: Zap, nome: string) {
+        let Id: string = this.user.getId();
+		if(Id != nome)
+			this.inbox.push(zap);
+	}
+	public getnots(): number{
+		return this.inbox.length;
+	}
+	public toString() : string{
+		let texto = "";
+		for(let elem of this.inbox){
+			texto += elem.toString() + "\n";
+		}
+		this.inbox = [];
+		return texto;
+    }
+    public exit(nome: string) {
+        this.user.exit(nome);
+    }
+}
+
+class User{
+	private userId : string;
+	private chats : Map<string, Chat>;
+	
+	constructor(userId : string){
+		this.userId = userId;
+		this.chats = new Map<string, Chat>();
+	}
+	public addChat(chat){
+		if (this.chats.has(chat.getId()))
+			throw new Error ("Grupo ja existe");
+		this.chats.set(chat.getId(), chat);
+	}
+	public toString(): string{
+		let Tchat = "[ ";
+        this.chats.forEach(chaves);
+        Tchat += text;
+        text = ""
+		Tchat += "]";
+		return Tchat;
+	}
+	public getId(): string{
+		return this.userId;
+	}
+	public notify(): string{
+        let Tnot = "[";
+        let essenome = this.userId;
+        function valores2(valor, chave, mapa) {
+            let valores: Chat;
+            valores = (valor)
+            Tnot += valores.getId() + "(" + valores.getnots(essenome) + ")";
+        }
+        this.chats.forEach(valores2); 
+		Tnot += "]";
+		return Tnot;
+	}
+	public exit(nome: string){
+		this.chats.delete(nome);
+	}
+}
+//coisas do zap2
+class Chat{
+	protected chatId : string;
+	protected rgUserInbox : Map<string, UserInbox>;
+	
+	constructor(chatId : string, user: User){
+		this.chatId = chatId;
+		this.rgUserInbox = new Map<string, UserInbox>();
+		this.rgUserInbox.set(user.getId(), new UserInbox(user));
+		user.addChat(this);
+	}
+	public getId(): string{
+		return this.chatId;
+	}
+	public invite(nome : string , user : User){
+		if (!this.rgUserInbox.has(nome))
+			throw new Error("dono nao esta no grupo");
+		if (this.rgUserInbox.has(user.getId()))
+			throw new Error("ja esta no grupo");
+		this.rgUserInbox.set(user.getId(), new UserInbox(user));
+		user.addChat(this);
+	}
+	public toString(): string{
+		let Tusers = "[ ";
+		this.rgUserInbox.forEach(chaves);
+        Tusers += text;
+        text = ""
+		Tusers += "]";
+		return Tusers;
+	}
+	public exit(nome :  string){
+		if (!this.rgUserInbox.has(nome))
+			throw new Error("nunca nem vi");
+		this.rgUserInbox.get(nome).exit(this.chatId);
+		this.rgUserInbox.delete(nome);
+	}
+	public zap(nome : string, msg : string){
+		if (!this.rgUserInbox.has(nome))
+			throw new Error("nunca nem vi");
+        let zap = new Zap(nome, msg);
+        let usersInbox= new Array<UserInbox>();
+        function valores(valor, chave, mapa) {
+            usersInbox.push(valor);
+        }
+        this.rgUserInbox.forEach(valores)
+        for (let elem of usersInbox) {
+            elem.addZap(zap, nome);
+        }
+	}
+    public getnots(nome: string): number{
+        let NumNots :number;
+        function nots(valor, chave, mapa) {
+            if ((chave) == nome) {
+                NumNots = (valor).getnots();
+            }
+        }
+        this.rgUserInbox.forEach(nots);
+        return NumNots;
+	}
+	public ler(nome : string):string{
+		if (!this.rgUserInbox.has(nome))
+			throw new Error("nunca nem vi");
+		return this.rgUserInbox.get(nome).toString();
+    }
+}
+
+
+class Talk extends Chat{
+	constructor(chatId: string, user: User, user2: User){
+		super (chatId, user);
+		this.rgUserInbox.set(user2.getId(), new UserInbox(user2));
+		user2.addChat(this);
+	}
+	public exit(nome: string){
+		throw new Error ("calma aí! não pode sair do talk!");
+	}
+	public invite(nome: string, user: User){
+		throw new Error ("miga, voce nao pode adicionar pessoas em um talk")
+	}
+}
+
+
+class Repository<T>{
+	private map: Map<string, T>;
+    private filetype: string;
+
+    public constructor(filetype: string){
+        this.filetype = filetype;
+        this.map = new Map<string, T>();
+    }
+	public add(nome: string, t : T){
+		this.map.set(nome, t);
+	}
+	public showAll(): string{
+		let Tusers = "["
+		this.map.forEach(chaves);
+        Tusers += text;
+        text = ""
+		Tusers += "]";
+		return Tusers;
+	}
+	public get(nome : string): T{
+		if (!this.map.has(nome))
+			throw new Error ("Usuario nao existe");
+		return this.map.get(nome);
+	}
+	public existe(nome: string){
+		if(this.map.has(nome))
+			throw new Error(this.filetype + "ja existe")
+	}
+}
+class WhatsappService {
+	private rep_chat: Repository<Chat>;
+	private rep_user: Repository<User>;
+
+	constructor() {
+		this.rep_chat = new Repository<Chat>("chat");
+		this.rep_user = new Repository<User>("user");
+	}
+
+	public processline(line: string): string {
+		let ui = line.split(" ");
+		let cmd = ui[0];
+
+		if (cmd == "help") {
+			return help;
+		}
+		else if (cmd == "addUser") {
+			this.rep_user.existe(ui[1]);
+			let usu = new User(ui[1]);
+			this.rep_user.add(ui[1], usu);
+			return "done";
+		}
+		else if (cmd == "allUser") {
+			return this.rep_user.showAll();
+		}
+		else if (cmd == "newChat"){
+			this.rep_chat.existe(ui[2]);
+			let chat = new Chat(ui[2], this.rep_user.get(ui[1]));
+			this.rep_chat.add(ui[2], chat);
+			return "done";
+		}
+		else if (cmd == "chats"){
+			return this.rep_user.get(ui[1]).toString();
+		}
+		else if (cmd == "invite"){
+			let usu2 = this.rep_user.get(ui[2]);
+			this.rep_chat.get(ui[3]).invite(ui[1], usu2);
+			return "done";
+		}
+		else if (cmd == "users"){
+			return this.rep_chat.get(ui[1]).toString();
+		}
+		else if (cmd == "leave"){
+			this.rep_chat.get(ui[2]).exit(ui[1]);
+			return "done";
+		}
+		else if (cmd == "zap") {
+			let msg = ""
+			for (let elem in ui) {
+				if (Number(elem) > 2) {
+					msg += ui[elem] + " "
+				}
+			}
+			this.rep_chat.get(ui[2]).zap(ui[1], msg);
+			return "done";
+		}
+		else if (cmd == "notify"){
+			return this.rep_user.get(ui[1]).notify();
+		}
+		
+		else if (cmd == "ler"){
+			return this.rep_chat.get(ui[2]).ler(ui[1]);
+		}
+		else if (cmd == "newtalk"){
+			let nome = ui[1] + "-" + ui[2];
+			this.rep_chat.existe(nome);
+			let talk = new Talk(nome, this.rep_user.get(ui[1]), this.rep_user.get(ui[2]));
+			this.rep_chat.add(nome, talk);
+			return "done";
+		}
+		return "digite um comando valido";
+	}
+	static main(){
+		let c: WhatsappService = new WhatsappService();
+		
+		let line= "";
+		while (line != "fim") {
+			line = prompt("DIGITE UM COMANDO:\n help (para ajuda)\n fim (para sair)");
+			if (line == "" || line == "fim") {
+				let chau = alert("Tchal querida!");
+				continue;
+			}		
+			try{
+				alert(c.processline(line));
+			}catch(e){
+				alert("seu comando nao foi valido:" + e);
+			}
+		}
+	}
+}
+
+WhatsappService.main();

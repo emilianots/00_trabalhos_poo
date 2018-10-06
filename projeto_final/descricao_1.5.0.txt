@@ -1,0 +1,7 @@
+Descrição detalhada;
+    Tipos de usuários;
+    Professor:
+    
+    Estudante:
+        Um estudante pode ser monitor como também coordenador de célula.
+            

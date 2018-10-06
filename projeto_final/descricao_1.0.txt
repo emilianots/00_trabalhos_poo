@@ -1,0 +1,44 @@
+Possíveis classes e propriedades do projeto;
+
+Classes;
+    Administrador;
+    Sistema;
+    Professor;
+    Estudante;
+    Monitoria;
+    Sala;
+    Disciplina;
+    Orientador_Celula;
+    Menssagem;
+
+
+Descrição;
+    Classe Administrador;
+        Único capaz de realizar as operações de CRUD para estudante, professor, disciplina, monitoria,
+        tipo de celula;
+        Possui acesso irrestrito e pode modificar todas as informações do sistema;
+    
+    Classe Sistema;
+        É o que vai realizar todas as relações entre as clases;
+
+    Classe Professor;
+        Possui nome, sala, disciplinas, n° matricula, senha, e-mail, monitor; 
+    
+    Classe Estudante;
+        Possui nome, disciplinas, n° matricula, senha, e-mail, pode ser monitor ou cordenador, se faz parte do
+        do PACCE ou não;
+    
+    Classe Monitoria;
+        Possui o estudante, a sala, professor e disciplina;
+    
+    Classe Sala;
+        Possui lista de professores e disciplinas;
+    
+    Clase Disciplina;
+        Nome, professor, sala e horário;
+
+    Classe Orientador_Celula;
+        Possui sala, professor horario, descrição da celula e grupo pertencente;
+    
+    Classe Menssagem;
+        Possui o autor, o destinatário e texto da menssagem;
